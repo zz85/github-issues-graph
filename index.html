@@ -49,100 +49,6 @@
 		'#8549ba'
 	];
 
-    var global = this;
-	var Samples = global.Samples || (global.Samples = {});
-	var Color = global.Color;
-
-	Samples.utils = {
-		// Adapted from http://indiegamr.com/generate-repeatable-random-numbers-in-js/
-		srand: function(seed) {
-			this._seed = seed;
-		},
-
-		rand: function(min, max) {
-			var seed = this._seed;
-			min = min === undefined ? 0 : min;
-			max = max === undefined ? 1 : max;
-			this._seed = (seed * 9301 + 49297) % 233280;
-			return min + (this._seed / 233280) * (max - min);
-		},
-
-		numbers: function(config) {
-			var cfg = config || {};
-			var min = cfg.min || 0;
-			var max = cfg.max || 1;
-			var from = cfg.from || [];
-			var count = cfg.count || 8;
-			var decimals = cfg.decimals || 8;
-			var continuity = cfg.continuity || 1;
-			var dfactor = Math.pow(10, decimals) || 0;
-			var data = [];
-			var i, value;
-
-			for (i = 0; i < count; ++i) {
-				value = (from[i] || 0) + this.rand(min, max);
-				if (this.rand() <= continuity) {
-					data.push(Math.round(dfactor * value) / dfactor);
-				} else {
-					data.push(null);
-				}
-			}
-
-			return data;
-		},
-
-		labels: function(config) {
-			var cfg = config || {};
-			var min = cfg.min || 0;
-			var max = cfg.max || 100;
-			var count = cfg.count || 8;
-			var step = (max - min) / count;
-			var decimals = cfg.decimals || 8;
-			var dfactor = Math.pow(10, decimals) || 0;
-			var prefix = cfg.prefix || '';
-			var values = [];
-			var i;
-
-			for (i = min; i < max; i += step) {
-				values.push(prefix + Math.round(dfactor * i) / dfactor);
-			}
-
-			return values;
-		},
-
-		months: function(config) {
-			var cfg = config || {};
-			var count = cfg.count || 12;
-			var section = cfg.section;
-			var values = [];
-			var i, value;
-
-			for (i = 0; i < count; ++i) {
-				value = MONTHS[Math.ceil(i) % 12];
-				values.push(value.substring(0, section));
-			}
-
-			return values;
-		},
-
-		color: function(index) {
-			return COLORS[index % COLORS.length];
-		},
-
-		transparentize: function(color, opacity) {
-			var alpha = opacity === undefined ? 0.5 : 1 - opacity;
-			return Color(color).alpha(alpha).rgbString();
-		}
-	};
-
-	// DEPRECATED
-	var randomScalingFactor = function() {
-		return Math.round(Samples.utils.rand(-100, 100));
-	};
-
-	// INITIALIZATION
-
-	Samples.utils.srand(Date.now());
 
     </script>
 	<style>
@@ -160,14 +66,10 @@
 	</div>
 	<br>
 	<br>
-	<button id="randomizeData">Randomize Data</button>
-	<button id="addDataset">Add Dataset</button>
-	<button id="removeDataset">Remove Dataset</button>
-	<button id="addData">Add Data</button>
-	<button id="removeData">Remove Data</button>
+	<!-- <button id=""></button> -->
 	<script>
         var REPO = 'zz85/mrdoobapproves';
-                
+
         var red = 'rgb(255, 99, 132)';
         var blue = 'rgb(54, 162, 235)';
         var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -188,14 +90,14 @@
             data: [
             ],
         };
-        
+
         var labels = [];
 		var config = {
 			type: 'line',
 			data: {
 				labels: labels,
 				datasets: [
-                    prDataset, 
+                    prDataset,
                     issueDataset
                 ]
 			},
@@ -237,69 +139,10 @@
 			myLine = new Chart(ctx, config);
 		};
 
-		document.getElementById('randomizeData').addEventListener('click', function() {
-			config.data.datasets.forEach(function(dataset) {
-				dataset.data = dataset.data.map(function() {
-					return randomScalingFactor();
-				});
 
-			});
 
-			myLine.update();
-		});
-
-		var colorNames = Object.keys(chartColors);
-		document.getElementById('addDataset').addEventListener('click', function() {
-			var colorName = colorNames[config.data.datasets.length % colorNames.length];
-			var newColor = chartColors[colorName];
-			var newDataset = {
-				label: 'Dataset ' + config.data.datasets.length,
-				backgroundColor: newColor,
-				borderColor: newColor,
-				data: [],
-				fill: false
-			};
-
-			for (var index = 0; index < config.data.labels.length; ++index) {
-				newDataset.data.push(randomScalingFactor());
-			}
-
-			config.data.datasets.push(newDataset);
-			myLine.update();
-		});
-
-		document.getElementById('addData').addEventListener('click', function() {
-			if (config.data.datasets.length > 0) {
-				var month = MONTHS[config.data.labels.length % MONTHS.length];
-				config.data.labels.push(month);
-
-				config.data.datasets.forEach(function(dataset) {
-					dataset.data.push(randomScalingFactor());
-				});
-
-				myLine.update();
-			}
-		});
-
-		document.getElementById('removeDataset').addEventListener('click', function() {
-			config.data.datasets.splice(0, 1);
-			myLine.update();
-		});
-
-		document.getElementById('removeData').addEventListener('click', function() {
-			config.data.labels.splice(-1, 1); // remove the label first
-
-			config.data.datasets.forEach(function(dataset) {
-				dataset.data.pop();
-			});
-
-			myLine.update();
-        });
-        
-        var issueApi = `https://api.github.com/repos/${REPO}/issues/events?per_page=100`;
-        var prApi = `https://api.github.com/repos/${REPO}/pulls?state=all&per_page=100&sort=created`;
-
-        console.log(prApi);
+        // var issueApi = `https://api.github.com/repos/${REPO}/issues/events?per_page=100&state=all&sort=created`;
+        var issueApi = `https://api.github.com/repos/${REPO}/issues?per_page=100&state=all&sort=created`;
 
         var counter = {
             IssuesByMonth: [],
@@ -314,38 +157,47 @@
 
         var min = Infinity;
         var max = -Infinity;
+        var issues = 0;
+        var prs = 0;
 
-        Promise.all([
-            fetch(prApi).then(res => res.json()),
-            fetch(issueApi).then(res => res.json())
-        ])
-        .then(([body, issuesJson]) => {
-            console.log(body.length);
+        function githubApi(done, last) {
+            var url = issueApi + (last ? '&page=' + last : '');
+            fetch(url).then(res => res.json()).then((body) => {
+                if (!body.length) return done();
+                console.log(body.length);
 
 
-            var issues = 0;
-            var prs = 0;
-            body.forEach(issue => {
-                var createdAt = new Date(issue.created_at);
+                body.forEach(issue => {
+                    var createdAt = new Date(issue.created_at);
 
-                var key = (createdAt.getFullYear() % 100) * 100 + createdAt.getMonth();
-                max = Math.max(max, key);
-                min = Math.min(min, key);
+                    var key = (createdAt.getFullYear() % 100) * 100 + createdAt.getMonth();
+                    max = Math.max(max, key);
+                    min = Math.min(min, key);
 
-                prs++;
-                inc('PrsByMonth', key);
+                    var isPr = issue.pull_request;
+
+                    if (isPr) {
+                        prs++;
+                        inc('PrsByMonth', key);
+                    } else {
+                        inc('IssuesByMonth', key);
+                        issues++;
+                    }
+
+                    // console.log('event', issue.event); // for events there are subscribed merged closed head_ref_deleted
+                });
+
+                if (body.length < 100) return done();
+
+                githubApi(done, (last | 0) + 1)
+
+                // TODO milestone
             });
+        }
 
-            issuesJson.forEach(issue => {
-                var createdAt = new Date(issue.created_at);
+        githubApi(() => {
+            console.log('done');
 
-                var key = (createdAt.getFullYear() % 100) * 100 + createdAt.getMonth();
-                max = Math.max(max, key);
-                min = Math.min(min, key);
-
-                inc('IssuesByMonth', key);
-                issues++;
-            });
 
             console.log('issues', issues, 'prs', prs);
             // console.log(countIssuesByMonth, min, max);
@@ -367,11 +219,9 @@
 
             console.log('done');
             myLine.update();
-        });
+        })
 
 	</script>
 </body>
 
 </html>
-
-
