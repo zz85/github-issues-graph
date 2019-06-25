@@ -172,7 +172,7 @@
         var blue = 'rgb(54, 162, 235)';
         var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         var prDataset = {
-            label: 'PRs',
+            label: 'PRs created per month',
             backgroundColor: blue,
             borderColor: blue,
             data: [
@@ -181,7 +181,7 @@
         };
 
         var issueDataset = {
-            label: 'Issues',
+            label: 'Issues created per month',
             fill: false,
             backgroundColor: red,
             borderColor: red,
@@ -296,8 +296,10 @@
 			myLine.update();
         });
         
-        var api = `https://api.github.com/repos/${REPO}/issues/events?per_page=100`;
-        console.log(api);
+        var issueApi = `https://api.github.com/repos/${REPO}/issues/events?per_page=100`;
+        var prApi = `https://api.github.com/repos/${REPO}/pulls?state=all&per_page=100&sort=created`;
+
+        console.log(prApi);
 
         var counter = {
             IssuesByMonth: [],
@@ -313,11 +315,11 @@
         var min = Infinity;
         var max = -Infinity;
 
-        fetch(api)
-        .then(res => {
-            return res.json();
-        })
-        .then(body => {
+        Promise.all([
+            fetch(prApi).then(res => res.json()),
+            fetch(issueApi).then(res => res.json())
+        ])
+        .then(([body, issuesJson]) => {
             console.log(body.length);
 
 
@@ -330,13 +332,19 @@
                 max = Math.max(max, key);
                 min = Math.min(min, key);
 
-                if (issue.issue.pull_request) {
-                    prs++;
-                    inc('IssuesByMonth', key);
-                } else {
-                    issues++;
-                    inc('PrsByMonth', key);
-                }
+                prs++;
+                inc('PrsByMonth', key);
+            });
+
+            issuesJson.forEach(issue => {
+                var createdAt = new Date(issue.created_at);
+
+                var key = (createdAt.getFullYear() % 100) * 100 + createdAt.getMonth();
+                max = Math.max(max, key);
+                min = Math.min(min, key);
+
+                inc('IssuesByMonth', key);
+                issues++;
             });
 
             console.log('issues', issues, 'prs', prs);
@@ -359,7 +367,6 @@
 
             console.log('done');
             myLine.update();
-
         });
 
 	</script>
