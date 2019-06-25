@@ -179,6 +179,15 @@
             ],
             fill: false,
         };
+
+        var issueDataset = {
+            label: 'Issues',
+            fill: false,
+            backgroundColor: red,
+            borderColor: red,
+            data: [
+            ],
+        };
         
         var labels = [];
 		var config = {
@@ -186,21 +195,9 @@
 			data: {
 				labels: labels,
 				datasets: [
-                    prDataset, {
-					label: 'Issues',
-					fill: false,
-					backgroundColor: red,
-					borderColor: red,
-					data: [
-						randomScalingFactor(),
-						randomScalingFactor(),
-						randomScalingFactor(),
-						randomScalingFactor(),
-						randomScalingFactor(),
-						randomScalingFactor(),
-						randomScalingFactor()
-					],
-				}]
+                    prDataset, 
+                    issueDataset
+                ]
 			},
 			options: {
 				responsive: true,
@@ -299,10 +296,20 @@
 			myLine.update();
         });
         
-        var api = `https://api.github.com/repos/${REPO}/issues/events?per_page=1000`;
+        var api = `https://api.github.com/repos/${REPO}/issues/events?per_page=100`;
         console.log(api);
 
-        var countByMonth = [];
+        var counter = {
+            IssuesByMonth: [],
+            PrsByMonth: []
+        }
+
+        function inc(type, key) {
+            var target = counter[type];
+            if (!target[key]) { target[key] = 0 };
+                target[key]++;
+        }
+
         var min = Infinity;
         var max = -Infinity;
 
@@ -313,6 +320,9 @@
         .then(body => {
             console.log(body.length);
 
+
+            var issues = 0;
+            var prs = 0;
             body.forEach(issue => {
                 var createdAt = new Date(issue.created_at);
 
@@ -320,18 +330,25 @@
                 max = Math.max(max, key);
                 min = Math.min(min, key);
 
-                if (!countByMonth[key]) { countByMonth[key] = 0 };
-                countByMonth[key]++;
+                if (issue.issue.pull_request) {
+                    prs++;
+                    inc('IssuesByMonth', key);
+                } else {
+                    issues++;
+                    inc('PrsByMonth', key);
+                }
             });
 
-            console.log(countByMonth, min, max);
+            console.log('issues', issues, 'prs', prs);
+            // console.log(countIssuesByMonth, min, max);
 
             var i = min;
             while (i <= max) {
                 var label = MONTHS[i % 100].substr(0, 3) + ' ' + (i / 100 | 0);
                 labels.push(label);
 
-                prDataset.data.push(countByMonth[i] | 0);
+                prDataset.data.push(counter.PrsByMonth[i] | 0);
+                issueDataset.data.push(counter.IssuesByMonth[i] | 0);
 
                 i++;
                 if (i % 100 === 12) {
