@@ -70,6 +70,11 @@
         // var REPO = 'zz85/mrdoobapproves';
         var REPO = 'mrdoob/three.js';
 
+        var hash = location.hash;
+        if (hash) {
+            REPO = hash.substr(1);
+        }
+
         var red = 'rgb(255, 99, 132)';
         var blue = 'rgb(54, 162, 235)';
         var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -91,6 +96,15 @@
             ],
         };
 
+        var releasesDataset = {
+            label: 'Releases',
+            fill: false,
+            backgroundColor: chartColors.yellow,
+            borderColor: chartColors.yellow,
+            data: [
+            ],
+        };
+
         var labels = [];
 		var config = {
 			type: 'line',
@@ -98,7 +112,8 @@
 				labels: labels,
 				datasets: [
                     prDataset,
-                    issueDataset
+                    issueDataset,
+                    releasesDataset
                 ]
 			},
 			options: {
@@ -127,11 +142,14 @@
 						display: true,
 						scaleLabel: {
 							display: true,
-							labelString: 'Value'
+							// labelString: 'Value'
 						}
 					}]
 				}
-			}
+			},
+            // plugins: [
+            //     Chartist.plugins.tooltip()
+            // ]
 		};
 
 		onload = function() {
@@ -139,14 +157,13 @@
 			myLine = new Chart(ctx, config);
 		};
 
-
-
-        // var issueApi = `https://api.github.com/repos/${REPO}/issues/events?per_page=100&state=all&sort=created`;
+        // var eventsApi = `https://api.github.com/repos/${REPO}/issues/events?per_page=100&state=all&sort=created`;
         var issueApi = `https://api.github.com/repos/${REPO}/issues?per_page=100&state=all&sort=created`;
 
         var counter = {
             IssuesByMonth: [],
-            PrsByMonth: []
+            PrsByMonth: [],
+            Release: []
         }
 
         function inc(type, key) {
@@ -160,6 +177,23 @@
         var issues = 0;
         var prs = 0;
 
+        function dateKey(date) {
+            var createdAt = new Date(date);
+            var key = (createdAt.getFullYear() % 100) * 100 + createdAt.getMonth();
+            return key;
+        }
+
+
+        fetch(`https://api.github.com/repos/${REPO}/releases`)
+        .then(v => v.json()).then(v => {
+            console.log(v);
+            v.forEach(release => {
+                // TODO place release.tag into description
+                var key = dateKey(release.created_at);
+                inc('Release', key);
+            })
+        })
+
         function githubApi(done, last) {
             var url = issueApi + (last ? '&page=' + last : '');
             fetch(url).then(res => res.json()).then((body) => {
@@ -167,9 +201,7 @@
                 console.log(body.length);
 
                 body.forEach(issue => {
-                    var createdAt = new Date(issue.created_at);
-
-                    var key = (createdAt.getFullYear() % 100) * 100 + createdAt.getMonth();
+                    var key = dateKey(issue.created_at);
                     max = Math.max(max, key);
                     min = Math.min(min, key);
 
@@ -207,6 +239,7 @@
 
                 prDataset.data.push(counter.PrsByMonth[i] | 0);
                 issueDataset.data.push(counter.IssuesByMonth[i] | 0);
+                releasesDataset.data.push(counter.Release[i] | 0);
 
                 i++;
                 if (i % 100 === 12) {
@@ -221,5 +254,4 @@
 
 	</script>
 </body>
-
 </html>
