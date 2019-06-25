@@ -7,10 +7,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/rough.js/3.1.0/rough.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-rough@latest/dist/chartjs-plugin-rough.min.js"></script>
     <script>
-        'use strict';
+    'use strict';
 
-        Chart.plugins.register(ChartRough);
-
+    Chart.plugins.register(ChartRough);
 
     var chartColors = {
         red: 'rgb(255, 99, 132)',
@@ -68,7 +67,8 @@
 	<br>
 	<!-- <button id=""></button> -->
 	<script>
-        var REPO = 'zz85/mrdoobapproves';
+        // var REPO = 'zz85/mrdoobapproves';
+        var REPO = 'mrdoob/three.js';
 
         var red = 'rgb(255, 99, 132)';
         var blue = 'rgb(54, 162, 235)';
@@ -166,7 +166,6 @@
                 if (!body.length) return done();
                 console.log(body.length);
 
-
                 body.forEach(issue => {
                     var createdAt = new Date(issue.created_at);
 
@@ -197,7 +196,6 @@
 
         githubApi(() => {
             console.log('done');
-
 
             console.log('issues', issues, 'prs', prs);
             // console.log(countIssuesByMonth, min, max);
